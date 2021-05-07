@@ -1,0 +1,19 @@
+---
+bind: "127.0.0.1:8888"
+cookieName: "ldap-auth"
+debug: no
+url: "/ldap-auth"
+ldap:
+  address: "ldap1.srv:636"
+  base: "OU=users,DC=domain,DC=srv"
+  bind:
+    user: "SRV\\ldap-reader"
+    password: "password"
+  filter:
+    user: "(sAMAccountName=%s)"
+    group: "(memberUid=%s)"
+  ssl:
+    use: yes
+    skipTls: no
+    skipVerify: no
+    serverName: "ldap1.srv"
