@@ -84,8 +84,8 @@ func (lc *LdapClient) Connect() error {
 func (lc *LdapClient) Close() {
 	if lc.Conn != nil {
 		lc.Conn.Close()
-		lc.Conn = nil
 	}
+	lc.Conn = nil
 }
 
 // Authenticate authenticates the user against the ldap backend.
@@ -99,6 +99,10 @@ func (lc *LdapClient) Authenticate(username, password string) (bool, map[string]
 	if lc.BindDN != "" && lc.BindPassword != "" {
 		err := lc.Conn.Bind(lc.BindDN, lc.BindPassword)
 		if err != nil {
+			if err.Error() == `LDAP Result Code 200 "Network Error": ldap: connection closed` {
+				lc.Close()
+				return lc.Authenticate(username, password)
+			}
 			return false, nil, err
 		}
 	}
