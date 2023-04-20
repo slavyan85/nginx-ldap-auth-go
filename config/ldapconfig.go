@@ -1,4 +1,4 @@
-package ldaphandler
+package config
 
 type LdapConfig struct {
 	Address string `yaml:"address"`

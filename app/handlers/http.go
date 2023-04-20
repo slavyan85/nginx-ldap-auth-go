@@ -1,33 +1,34 @@
-package httphandler
+package handlers
 
 import (
 	"encoding/base64"
 	"errors"
-	"go.uber.org/zap"
 	"net/http"
-	"nginx-ldap-auth-go/ldaphandler"
 	"strings"
 	"time"
+
+	"github.com/vkryuchenko/nginx-ldap-auth-go/app/clients"
+	"go.uber.org/zap"
 )
 
-type Handler struct {
+type HttpHandler struct {
 	CookieName string
-	LdapClient *ldaphandler.LdapClient
+	LdapClient *clients.LdapClient
 	Logger     *zap.Logger
 }
 
-func (*Handler) DefaultRoute(w http.ResponseWriter, r *http.Request) {
+func (*HttpHandler) DefaultRoute(w http.ResponseWriter, r *http.Request) {
 	http.NotFound(w, r)
 }
 
-func (h *Handler) Error(message string, w http.ResponseWriter, r *http.Request) {
+func (h *HttpHandler) Error(message string, w http.ResponseWriter, r *http.Request) {
 	h.Logger.Warn(message, zap.String("ip", getClientIP(r)))
 	w.Header().Set("WWW-Authenticate", "Basic realm=None")
 	w.Header().Set("Cache-Control", "no-cache")
 	http.Error(w, "", http.StatusUnauthorized)
 }
 
-func (h *Handler) AuthRoute(w http.ResponseWriter, r *http.Request) {
+func (h *HttpHandler) AuthRoute(w http.ResponseWriter, r *http.Request) {
 	authHeader := r.Header.Get("Authorization")
 	authCokie, err := r.Cookie(h.CookieName)
 	switch err {

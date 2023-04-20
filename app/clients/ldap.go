@@ -1,10 +1,12 @@
-package ldaphandler
+package clients
 
 import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	"gopkg.in/ldap.v2"
+
+	"github.com/go-ldap/ldap/v3"
+	"github.com/vkryuchenko/nginx-ldap-auth-go/config"
 )
 
 type LdapClient struct {
@@ -22,8 +24,8 @@ type LdapClient struct {
 	ClientCertificates []tls.Certificate // Adding client certificates
 }
 
-func NewClient(config LdapConfig) (*LdapClient, error) {
-	client := LdapClient{
+func NewLdapClient(config config.LdapConfig) (*LdapClient, error) {
+	client := &LdapClient{
 		Address:            config.Address,
 		Base:               config.Base,
 		BindDN:             config.Bind.User,
@@ -37,7 +39,7 @@ func NewClient(config LdapConfig) (*LdapClient, error) {
 		SkipTLS:            config.Ssl.SkipTls,
 		ClientCertificates: nil,
 	}
-	return &client, client.Connect()
+	return client, client.Connect()
 }
 
 func (lc *LdapClient) IsAlive() bool {
@@ -62,14 +64,14 @@ func (lc *LdapClient) Connect() error {
 				}
 			}
 		} else {
-			config := &tls.Config{
+			cfg := &tls.Config{
 				InsecureSkipVerify: lc.InsecureSkipVerify,
 				ServerName:         lc.ServerName,
 			}
 			if lc.ClientCertificates != nil && len(lc.ClientCertificates) > 0 {
-				config.Certificates = lc.ClientCertificates
+				cfg.Certificates = lc.ClientCertificates
 			}
-			l, err = ldap.DialTLS("tcp", lc.Address, config)
+			l, err = ldap.DialTLS("tcp", lc.Address, cfg)
 			if err != nil {
 				return err
 			}
