@@ -56,6 +56,10 @@ func (h *HttpHandler) AuthRoute(w http.ResponseWriter, r *http.Request) {
 		h.Error(err.Error(), w, r)
 		return
 	}
+	if user == "" || password == "" {
+		h.Error("user and password can not be empty", w, r)
+		return
+	}
 	_, _, err = h.LdapClient.Authenticate(user, password)
 	if err != nil {
 		h.Error(err.Error(), w, r)
@@ -72,14 +76,18 @@ func decodeAuth(auth string) (string, string, error) {
 		return "", "", err
 	}
 	splited := strings.Split(string(decoded), ":")
+	var user, password string
 	switch {
 	case len(splited) == 2:
-		return splited[0], splited[1], nil
+		user = splited[0]
+		password = splited[1]
 	case len(splited) > 2:
-		return splited[0], strings.Join(splited[1:], ":"), nil
+		user = splited[0]
+		password = strings.Join(splited[1:], ":")
 	default:
-		return "", "", errors.New(auth + " is not auth data")
+		err = errors.New(auth + " is not auth data")
 	}
+	return strings.TrimSpace(user), strings.TrimSpace(password), err
 }
 
 func getClientIP(r *http.Request) string {
